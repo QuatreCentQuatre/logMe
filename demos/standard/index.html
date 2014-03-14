@@ -2,16 +2,16 @@
 <head>
     <script src="../../vendor/jquery-1.9.1.min.js"></script>
     <script src="../../vendor/meLibs/helpMe.js"></script>
-    <script src="../../src/debugMe.js"></script>
+    <script src="../../src/logMe.js"></script>
 
     <script type="text/javascript">
         $(document).ready(function(){
             console.log("Normal Debugging!");
-            Me.debug.setOptions({mobile:true});
+            Me.log.setOptions({mobile:true});
             console.log("Debugger for mobile!");
-            Me.debug.disableLog();
+            Me.log.disableLog();
             console.log("Disabled!");
-            Me.debug.enableLog();
+            Me.log.enableLog();
             console.log("Enabled!");
         });
     </script>
