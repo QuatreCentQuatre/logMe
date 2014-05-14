@@ -1,86 +1,125 @@
 /*
- * LogMe
- * Log the way you need it
- * 4do need to find how to extend base console method so I append them again when we change type.
- * 4do add method to profile logs on an external server if not our ip and profiling is on.
+ * LogMe 1.0 (https://github.com/QuatreCentQuatre/logMe/)
+ * Let you control the way you want to log.
+ *
+ * Licence : GLP v2
+ *
+ * Dependencies :
+ * 	- HelpMe (https://github.com/QuatreCentQuatre/helpMe/)
+ *
+ * Methods :
+ *  - Constructor :
+ *  	- __construct : inital method
+ *  	- __dependencies : check any depency support and send some errors
+ *
+ * 	- Public :
+ * 		- setOptions(object) : pass new options
+ * 		- getOptions : receive the current options
+ * 		- enable : activate logs
+ * 		- disable : disable logs
+ * 		- toggleDebugger(boolean) : will toggle debugger
+ * 		- fixConsole : will force a redraw of the methods (will be called after setOptions)
+ *
+ * 	- Private :
+ *		-
+ *		-
+ *
+ * Updates Needed :
+ *  - need to extend base console method so I append them again when we change back type to normal logs without refresh.
+ *  - add method to send to a remote server if its not businessIP and remote is on.
+ *
  * */
 (function($, window, document, undefined){
 	var LogMe = function(options){
 		this.__construct(options);
 	};
-
 	var proto = LogMe.prototype;
 
-	var defaults = {
+	/* -------- DEFAULTS OPTIONS ------- */
+	proto.__name     = "LogMe";
+	proto.__version  = 1.0;
+
+	proto.__defaults = {
 		active: true,
 		mobile: false,
-		remote: false
+		remote: false,
+		businessIP: "66.130.40.67" //Get your ip on http://www.whatismyip.com/
 	};
 
-	var myIP = "66.130.40.67"; //http://www.whatismyip.com/
-	var logArray   = [];
-	var logDelay   = 1000;
-	var logTimeout = null;
-
-	var error = false;
-
-	//--------Methods--------//
+	/* --------- PUBLIC METHODS -------- */
 	proto.__construct = function(options) {
-		if (!Me.help) {
-			console.warn("LogMe :: required helpMe", "https://github.com/QuatreCentQuatre/helpMe");
-			error = true;
-		}
-
-		if (error) {
+		if (!this.__dependencies()) {
 			return this;
 		}
 
-		this.debug_count     = 0;
-		this.debug_height    = 0;
-		this.console_methods = ['assert', 'clear', 'count', 'debug', 'dir', 'dirxml', 'exception', 'group', 'groupCollapsed', 'groupEnd', 'markTimeline', 'profile', 'profileEnd', 'table', 'time', 'timeEnd', 'timeStamp', 'trace'];
-		this.debug_methods   = ['log', 'info', 'warn', 'error'];
+		/* set constructor options */
+		this.options = Me.help.extend({}, this.__defaults);
 
-		this.options = Me.help.extend({}, defaults);
+		this.loggingParams = {
+			logs: [], // logs will be keep here before sent
+			delay: 1000, // delay before logs will be sent
+			timeout: null // timeout initiated for logs
+		};
+
+		this.mainConsole = {};
+
+		this.commons_methods = ['log', 'info', 'warn', 'error'];
+		this.all_methods     = ['assert', 'clear', 'count', 'debug', 'dir', 'dirxml', 'exception', 'group', 'groupCollapsed', 'groupEnd', 'markTimeline', 'profile', 'profileEnd', 'table', 'time', 'timeEnd', 'timeStamp', 'trace'];
+
+		this.rows_count    = 0;
+		this.logger_height = 0;
+
 		this.setOptions(options);
 
+		/* Verify is our Buisness IP the same as the current IP */
 		if(this.options.active) {
-			//this.getIP();
+			privateMethods.checkIP.call(this);
 		}
+
 		return this;
 	};
 
+	proto.__dependencies = function() {
+		var isOk = true;
+
+		if (!Me.help) {
+			console.warn(proto.__name + " :: " + "required helpMe (https://github.com/QuatreCentQuatre/helpMe)");
+			isOk = false;
+		}
+
+		return isOk;
+	};
+
 	proto.setOptions = function(options) {
+		if (!this.__dependencies()) {
+			return this;
+		}
 		this.options = Me.help.extend(this.options, options);
 		this.fixConsole();
 		return this;
 	};
 
-	proto.getIP = function() {
-		// handle more then 1 site to get IP if one is down. store ip and hash custom for each visitor
-		var view = this;
-		$.ajax({
-			method:'GET',
-			url: 'http://ipinfo.io/json',
-			type: 'json',
-			success: function(data) {
-				view.currentIP = data.ip;
-				privateMethods.isRemote.call(view);
-			},
-			error: function() {
-
-			}
-		});
-		// http://l2.io/ip
+	proto.getOptions = function() {
+		if (!this.__dependencies()) {
+			return this;
+		}
+		return this.options;
 	};
 
-	proto.enableLog = function() {
+	proto.enable = function() {
+		if (!this.__dependencies()) {
+			return this;
+		}
 		this.options.active = true;
 		this.toggleDebugger(true);
 		this.fixConsole();
 		return this;
 	};
 
-	proto.disableLog = function() {
+	proto.disable = function() {
+		if (!this.__dependencies()) {
+			return this;
+		}
 		this.options.active = false;
 		this.toggleDebugger(false);
 		this.fixConsole();
@@ -88,36 +127,50 @@
 	};
 
 	proto.toggleDebugger = function(bool) {
+		if (!this.__dependencies()) {
+			return this;
+		}
 		var $logger = privateMethods.getLogger.call(this);
 		if ($logger.length > 0) {
-			if (!bool) {
-				$logger.css({display:'none'}).addClass('disabled');
-			} else {
-				$logger.css({display:''}).removeClass('disabled');
-			}
+			var display = (bool) ? '' : 'none';
+			$logger.css({display:display});
 		}
+		return this;
 	};
 
 	proto.fixConsole = function() {
-		var noop     = function(){};
-		var console  = (window.console = window.console || {});
+		if (!this.__dependencies()) {
+			return this;
+		}
+		var noop    = function(){};
+		var console = (window.console = window.console || {});
 		var method;
 
-		var methods_length = this.console_methods.length;
-		while (methods_length--) {
-			method = this.console_methods[methods_length];
+		/* get all real console methods */
+		var allMethodsArray = this.all_methods.concat(this.commons_methods);
+		var total = allMethodsArray.length - 1;
+		while (total >= 0) {
+			method = allMethodsArray[total];
+			if (typeof console[method] !== "function") {
+				this.mainConsole[method] = console[method];
+			}
+			total --;
+		}
 
+		total = this.all_methods.length - 1;
+		while (total >= 0) {
+			method = this.all_methods[total];
 			if (!this.options.active) {
 				console[method] = noop;
 			} else if (typeof console[method] !== "function") {
 				console[method] = Me.help.proxy(privateMethods.mobileLog, this);
 			}
+			total --;
 		}
 
-		methods_length = this.debug_methods.length;
-		while (methods_length--) {
-			method = this.debug_methods[methods_length];
-
+		total = this.commons_methods.length;
+		while (total >= 0) {
+			method = this.commons_methods[total];
 			if (!this.options.active) {
 				console[method] = noop;
 			} else if (this.options.remote) {
@@ -126,8 +179,16 @@
 				console[method] = Me.help.proxy(privateMethods.mobileLog, this);
 			}  else if (typeof console[method] !== "function") {
 				console[method] = Me.help.proxy(privateMethods.mobileLog, this);
+			} else {
+				console[method] = this.mainConsole[method];
 			}
+			total --;
 		}
+		return this;
+	};
+
+	proto.toString = function() {
+		return this.__name;
 	};
 
 	var privateMethods = {
@@ -250,6 +311,23 @@
 			logTimeout = setTimeout(Me.help.proxy(privateMethods.remoteSend, this), logDelay);
 
 		},
+		checkIP: function() { // 4do add new support : http://l2.io/ip
+			return this;
+			var view = this;
+			view.myIP = "66.130.40.67";
+			$.ajax({
+				method:'GET',
+				url: 'http://ipinfo.io/json',
+				type: 'json',
+				success: function(data) {
+					view.myIP = data.ip;
+					privateMethods.isRemote.call(view);
+				},
+				error: function() {
+
+				}
+			});
+		},
 		remoteSend: function() {
 			var logsRequest = logArray;
 			logArray = [];
@@ -257,7 +335,7 @@
 			$.ajax({
 				method:'POST',
 				url: '/',
-				data: {user:view.currentIP, logs:logsRequest},
+				data: {user:view.myIP, logs:logsRequest},
 				type: 'json',
 				dataType: 'json',
 				success: function(data){
@@ -265,7 +343,7 @@
 			});
 		},
 		isRemote: function() {
-			if (this.currentIP != myIP) {
+			if (this.myIP != myIP) {
 				this.setOptions({remote:true});
 			}
 		}
