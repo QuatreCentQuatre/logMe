@@ -52,26 +52,12 @@
 			return this;
 		}
 
-		/* set constructor options */
+		this.__properties();
+
 		this.options = Me.help.extend({}, this.__defaults);
-
-		this.loggingParams = {
-			logs: [], // logs will be keep here before sent
-			delay: 1000, // delay before logs will be sent
-			timeout: null // timeout initiated for logs
-		};
-
-		this.mainConsole = {};
-
-		this.commons_methods = ['log', 'info', 'warn', 'error'];
-		this.all_methods     = ['assert', 'clear', 'count', 'debug', 'dir', 'dirxml', 'exception', 'group', 'groupCollapsed', 'groupEnd', 'markTimeline', 'profile', 'profileEnd', 'table', 'time', 'timeEnd', 'timeStamp', 'trace'];
-
-		this.rows_count    = 0;
-		this.logger_height = 0;
-
 		this.setOptions(options);
 
-		/* Verify is our Buisness IP the same as the current IP */
+		/* Verify if our Buisness IP the same as the current IP */
 		if(this.options.active) {
 			privateMethods.checkIP.call(this);
 		}
@@ -88,6 +74,22 @@
 		}
 
 		return isOk;
+	};
+
+	proto.__properties = function() {
+		this.properties = {
+			commons_methods: ['log', 'info', 'warn', 'error'],
+			all_methods: ['assert', 'clear', 'count', 'debug', 'dir', 'dirxml', 'exception', 'group', 'groupCollapsed', 'groupEnd', 'markTimeline', 'profile', 'profileEnd', 'table', 'time', 'timeEnd', 'timeStamp', 'trace'],
+			logger_rows: 0,
+			logger_height: 0,
+			logging_options: {
+				logs: [], // logs will be keep here before sent
+				delay: 1000, // delay before logs will be sent
+				timeout: null // timeout initiated for logs
+			}
+		};
+
+		return this;
 	};
 
 	proto.setOptions = function(options) {
@@ -147,19 +149,19 @@
 		var method;
 
 		/* get all real console methods */
-		var allMethodsArray = this.all_methods.concat(this.commons_methods);
-		var total = allMethodsArray.length - 1;
-		while (total >= 0) {
-			method = allMethodsArray[total];
-			if (typeof console[method] !== "function") {
-				this.mainConsole[method] = console[method];
-			}
-			total --;
-		}
+		/*var allMethodsArray = this.all_methods.concat(this.commons_methods);
+		 var total = allMethodsArray.length - 1;
+		 while (total >= 0) {
+		 method = allMethodsArray[total];
+		 if (typeof console[method] !== "function") {
+		 this.mainConsole[method] = console[method];
+		 }
+		 total --;
+		 }*/
 
-		total = this.all_methods.length - 1;
+		var total = this.properties.all_methods.length - 1;
 		while (total >= 0) {
-			method = this.all_methods[total];
+			method = this.properties.all_methods[total];
 			if (!this.options.active) {
 				console[method] = noop;
 			} else if (typeof console[method] !== "function") {
@@ -168,9 +170,9 @@
 			total --;
 		}
 
-		total = this.commons_methods.length;
+		total = this.properties.commons_methods.length - 1;
 		while (total >= 0) {
-			method = this.commons_methods[total];
+			method = this.properties.commons_methods[total];
 			if (!this.options.active) {
 				console[method] = noop;
 			} else if (this.options.remote) {
@@ -179,8 +181,6 @@
 				console[method] = Me.help.proxy(privateMethods.mobileLog, this);
 			}  else if (typeof console[method] !== "function") {
 				console[method] = Me.help.proxy(privateMethods.mobileLog, this);
-			} else {
-				console[method] = this.mainConsole[method];
 			}
 			total --;
 		}
@@ -193,8 +193,8 @@
 
 	var privateMethods = {
 		getLogger: function() {
-			var $logger = $('#log-me');
-			if($logger.length == 0) {
+			var $el = $('#log-me');
+			if($el.length == 0) {
 				var DOM = '' +
 					'<div id="log-me" class="box-sizing">' +
 					'<div class="log-me-header box-sizing">' +
@@ -229,55 +229,62 @@
 				$('head').append(CSS);
 				$('head').append('<link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet" />');
 
-				$logger = $('#log-me');
+				$el = $('#log-me');
 			}
-			privateMethods.addLoggerEvent.call(this, $logger);
-			return $logger;
+			privateMethods.addLoggerEvent.call(this, $el);
+			return $el;
 		},
-		addLoggerEvent: function($logger) {
+		addLoggerEvent: function($el) {
 			var scope = this;
-			$logger.on('click', '.log-me-btn.log-me-hide', function(e){
-				$logger.find('.log-me-ctn').css({display:'none'});
-				$logger.find('.log-me-btn.log-me-hide').addClass('hide');
-				$logger.find('.log-me-btn.log-me-show').removeClass('hide');
+
+			$el.on('click', '.log-me-btn.log-me-hide', function(e){
+				$el.find('.log-me-ctn').css({display:'none'});
+				$el.find('.log-me-btn.log-me-hide').addClass('hide');
+				$el.find('.log-me-btn.log-me-show').removeClass('hide');
 			});
-			$logger.on('click', '.log-me-btn.log-me-show', function(e){
-				$logger.find('.log-me-ctn').css({display:''});
-				$logger.find('.log-me-btn.log-me-hide').removeClass('hide');
-				$logger.find('.log-me-btn.log-me-show').addClass('hide');
+
+			$el.on('click', '.log-me-btn.log-me-show', function(e){
+				$el.find('.log-me-ctn').css({display:''});
+				$el.find('.log-me-btn.log-me-hide').removeClass('hide');
+				$el.find('.log-me-btn.log-me-show').addClass('hide');
 			});
-			$logger.on('click', '.log-me-btn.log-me-close', function(e){
-				scope.disableLog();
+
+			$el.on('click', '.log-me-btn.log-me-close', function(e){
+				scope.disable();
 			});
-			$logger.on('click', '.log-me-btn.log-me-full', function(e){
-				$logger.css({width:'100%', height:'100%'});
-				$logger.find('.log-me-ctn').css({display:'', maxHeight:'100%'});
-				$logger.find('.log-me-btn.log-me-full').addClass('hide');
-				$logger.find('.log-me-btn.log-me-collapse').removeClass('hide');
-				$logger.find('.log-me-btn.log-me-hide').addClass('hide');
-				$logger.find('.log-me-btn.log-me-show').addClass('hide');
+
+			$el.on('click', '.log-me-btn.log-me-full', function(e){
+				$el.css({width:'100%', height:'100%'});
+				$el.find('.log-me-ctn').css({display:'', maxHeight:'100%'});
+				$el.find('.log-me-btn.log-me-full').addClass('hide');
+				$el.find('.log-me-btn.log-me-collapse').removeClass('hide');
+				$el.find('.log-me-btn.log-me-hide').addClass('hide');
+				$el.find('.log-me-btn.log-me-show').addClass('hide');
 			});
-			$logger.on('click', '.log-me-btn.log-me-collapse', function(e){
-				$logger.css({width:'', height:''});
-				$logger.find('.log-me-ctn').css({maxHeight:''});
-				$logger.find('.log-me-btn.log-me-full').removeClass('hide');
-				$logger.find('.log-me-btn.log-me-collapse').addClass('hide');
-				$logger.find('.log-me-btn.log-me-hide').removeClass('hide');
+
+			$el.on('click', '.log-me-btn.log-me-collapse', function(e){
+				$el.css({width:'', height:''});
+				$el.find('.log-me-ctn').css({maxHeight:''});
+				$el.find('.log-me-btn.log-me-full').removeClass('hide');
+				$el.find('.log-me-btn.log-me-collapse').addClass('hide');
+				$el.find('.log-me-btn.log-me-hide').removeClass('hide');
 			});
 		},
 		mobileLog: function(log) {
-			var formated_log = log;
-			if (typeof formated_log === "object") {
-				formated_log = JSON.stringify(formated_log);
+			var scope = this;
+			var next_log = log;
+			if (typeof next_log === "object") {
+				next_log = JSON.stringify(next_log);
 			}
-			logArray.push(formated_log);
-			if(logTimeout){clearTimeout(logTimeout);}
-			logTimeout = setTimeout(Me.help.proxy(privateMethods.mobileSend, this), logDelay);
+			scope.properties.logging_options.logs.push(next_log);
+			if(scope.properties.logging_options.timeout){clearTimeout(scope.properties.logging_options.timeout);}
+			this.properties.logging_options.timeout = setTimeout(Me.help.proxy(privateMethods.mobileSend, this), scope.properties.logging_options.delay);
 		},
 		mobileSend: function() {
 			var scope = this;
-			var logsRequest = logArray;
-			logArray = [];
+			var logsRequest = scope.properties.logging_options.logs;
+			scope.properties.logging_options.logs = [];
+
 			var $logger = privateMethods.getLogger.call(this);
 			var html = "";
 			$.each(logsRequest, function(index, log){
@@ -286,17 +293,17 @@
 
 			var $logger_log_ctn = $logger.find('.log-me-ctn');
 			$logger_log_ctn.append(html);
-			if (this.debug_height > 288) {
-				if($logger_log_ctn.scrollTop() == this.debug_height - 288 || $logger_log_ctn.scrollTop() == 0) {
-					$logger_log_ctn.scrollTop($logger_log_ctn[0].scrollHeight);
-				}
+			var beginAutoScrollHeight = (240 - 28);
+			scope.properties.logger_height = $logger_log_ctn[0].scrollHeight;
+			if (scope.properties.logger_height > beginAutoScrollHeight) {
+				$logger_log_ctn.scrollTop(scope.properties.logger_height);
 			}
-			this.debug_height = $logger_log_ctn[0].scrollHeight;
 		},
 		mobileAdd: function(log) {
-			this.debug_count ++;
+			var scope = this;
+			scope.properties.logger_rows ++;
 			var html = "";
-			html += "<div class='log-me-row'><div class='log-me-row-int'>" + this.debug_count + " :&nbsp;</div><div class='log-me-row-output'>";
+			html += "<div class='log-me-row'><div class='log-me-row-int'>" + scope.properties.logger_rows + " :&nbsp;</div><div class='log-me-row-output'>";
 			html += log;
 			html += "</div><div class='log-me-row-clear'></div></div>";
 			return html;
