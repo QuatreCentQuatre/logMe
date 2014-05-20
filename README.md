@@ -17,11 +17,11 @@ Place the **logMe.js** file in your default JavaScript vendor directory. Link th
 ```
 <script src="js/vendor/helpMe.js"></script>
 <script src="js/vendor/logMe.js"></script>
-
 ```
 Here you go ! You're now ready to use logMe. Here most commons method used.
 
 ```
+
 //Debugger for mobile.
 Me.log.setOptions({mobile:true});
 
