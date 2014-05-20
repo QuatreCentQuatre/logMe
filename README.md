@@ -12,7 +12,7 @@ Let you control the way you want to log. Useful for debuging on mobile or old br
 
 ### Getting Started
 
-Place the **logMe.js** file in your default JavaScript vendor directory. Link the script before the end of your **</body>** and after **helpMe.js**. 
+Place the **logMe.js** file in your default JavaScript vendor directory. Link the script before the end of your **body** and after **helpMe.js**.
 
 ```
 <script src="js/vendor/helpMe.js"></script>
