@@ -1,14 +1,12 @@
 #LogMe 1.0 
 
 Let you control the way you want to log. Useful for debuging on mobile or old browsers.
-<br/><br/>
 
 ---
 
 ### Dependencies
 
 **HelpMe** (https://github.com/QuatreCentQuatre/helpMe/)
-<br/><br/>
 
 ---
 
@@ -17,7 +15,6 @@ Let you control the way you want to log. Useful for debuging on mobile or old br
 Place the **logMe.js** file in your default JavaScript vendor directory. Link the script before the end of your **</body>** and after **helpMe.js**. 
 
 ```
-
 <script src="js/vendor/helpMe.js"></script>
 <script src="js/vendor/logMe.js"></script>
 
@@ -36,8 +33,6 @@ Me.log.enable();
 
 ```
 
-<br/><br/>
-
 ---
 
 ### Methods
@@ -55,8 +50,6 @@ Here the list of methods of logMe with a small description.
 - disable : disable logs
 - toggleDebugger(boolean) : will toggle debugger
 - fixConsole : will force a redraw of the methods (will be called after setOptions)
-
-<br/><br/>
 
 ---
 
