@@ -1,4 +1,4 @@
-#LogMe 1.0 
+#logMe 1.0 
 
 Let you control the way you want to log. Useful for debuging on mobile or old browsers.
 
